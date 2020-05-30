@@ -24,32 +24,9 @@ The data lake was formed as a star layout and stored to S3 to enabale: easy muta
 
 - The AWS infrastructure is set up according to this [tutorial](https://aws.amazon.com/blogs/big-data/build-a-concurrent-data-orchestration-pipeline-using-amazon-emr-and-apache-livy/)
 - Upload the CloudFormation script to create the resources, such as EC2 instance, RSD database for Airflow, security groups, S3 bucket
-- Then connect to the EC2 instance:
-
-```
-sudo su
-cd ~/airflow
-source ~/.bash_profile
-bash start.sh
-bash run_dags.sh
-```
+- Connect to the airflow server and execute dag
 
 # ETL
-
-- dag_cluster: start the EMR cluster, and wait for all data transformation is finished, then terminate the cluster
-
-![alt text](imgs/cluster-dag.png)
-
-- dag_normalize: wait for EMR cluster to be ready, then use Apache Livy REST API to create interactive Spark session on the cluster, submit a Spark script to read data from S3, do transformation and write the output to S3
-  - This DAG handles normalized tables
-
-![alt text](imgs/normalize_dag.png)
-
-- dag_analytics: wait for EMR cluster to be ready, and that normalized tables are processed, then read normalized tables to create analytics tables, and write to S3
-  - This DAG handles immigration data, which is partitioned for 12 months from jan-2016 to dec-2016
-  - To re-run this DAG, change the DAG name, then delete the existing DAG from Airflow, and refresh the UI
-
-![alt text](imgs/analytics_dag.png)
 
 ## Possible errors
 
