@@ -2,7 +2,7 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-import lib.emr_lib as emr
+import emrlib.emr_lib as emr
 
 
 default_args = {
