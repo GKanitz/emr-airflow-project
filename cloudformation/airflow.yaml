@@ -85,6 +85,8 @@ Resources:
           # Clone the git repository
           git clone https://github.com/GKanitz/emr-airflow-project.git
           sudo pip3 install boto3
+          sudo pip3 install pandas
+          sudo pip3 install fastparquet
           # Install airflow using pip
           echo "Install Apache Airflow"
           sudo SLUGIFY_USES_TEXT_UNIDECODE=yes pip3 install -U apache-airflow
