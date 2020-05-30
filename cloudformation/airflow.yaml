@@ -12,7 +12,6 @@ Parameters:
     Type: String
     AllowedPattern: ".+"
   DBPassword:
-    Default:
     NoEcho: "true"
     Description: Airflow database admin account password
     Type: String
