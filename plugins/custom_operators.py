@@ -11,7 +11,7 @@ import requests
 
 def get_region():
     """Determine what reagin the instance is running in.
-       (https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/instance-identity-documents.html)
+       (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-identity-documents.html)
 
     Returns:
         [string] -- region id string (i.e. 'us-west-2')
