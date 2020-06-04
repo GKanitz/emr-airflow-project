@@ -18,7 +18,7 @@ default_args = {
 
 # Initialize the DAG
 dag = DAG(
-    "trasform_immigration",
+    "trasform_immigration_dag",
     concurrency=3,
     schedule_interval="@monthly",
     default_args=default_args,
@@ -81,7 +81,7 @@ wait_for_cluster_completion = PythonOperator(
 )
 
 transform_labels = PythonOperator(
-    task_id="transform_immigration",
+    task_id="transform_labels",
     python_callable=submit_to_emr,
     op_kwargs={"script_file": "/root/airflow/dags/transform/labels.py"},
     dag=dag,
@@ -95,7 +95,7 @@ transform_immigration = PythonOperator(
 )
 
 transform_states = PythonOperator(
-    task_id="transform_immigration",
+    task_id="transform_states",
     python_callable=submit_to_emr,
     op_kwargs={"script_file": "/root/airflow/dags/transform/states.py"},
     dag=dag,
@@ -110,6 +110,8 @@ terminate_cluster = PythonOperator(
 
 # pylint: disable=pointless-statement
 create_cluster >> wait_for_cluster_completion
-wait_for_cluster_completion >> transform_labels >> transform_immigration
-wait_for_cluster_completion >> transform_states >> transform_immigration
+wait_for_cluster_completion >> [
+    transform_labels,
+    transform_states,
+] >> transform_immigration
 transform_immigration >> terminate_cluster
