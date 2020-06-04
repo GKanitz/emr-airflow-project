@@ -107,7 +107,7 @@ def create_cluster(
                 },
             ],
             "KeepJobFlowAliveWhenNoSteps": True,
-            "Ec2KeyName": "uda-capstone",
+            "Ec2KeyName": "udacity-final-project",
             "EmrManagedMasterSecurityGroup": emr_master_security_group_id,
             "EmrManagedSlaveSecurityGroup": emr_slave_security_group_id,
         },
