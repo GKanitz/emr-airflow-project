@@ -12,7 +12,7 @@ Parameters:
     Type: String
     MinLength: "3"
     MaxLength: "63"
-    AllowedPattern: "(?!^(\d{1,3}\.){3}\d{1,3}$)(^[a-z0-9]([a-z0-9-]*(\.[a-z0-9])?)*$(?<!\-))"
+    AllowedPattern: "^[a-z0-9]+[a-z0-9-]*"
   DBPassword:
     NoEcho: "true"
     Description: Airflow database admin account password
@@ -61,7 +61,7 @@ Resources:
     Properties:
       KeyName: !Ref "KeyName"
       SecurityGroups: [!Ref "AirflowEC2SecurityGroup"]
-      InstanceType: "m4.xlarge"
+      InstanceType: "m4.large"
       IamInstanceProfile:
         Ref: EC2InstanceProfile
       Tags:
@@ -81,28 +81,32 @@ Resources:
           yum install -y aws-cfn-bootstrap
           # Start cfn-init
           /opt/aws/bin/cfn-init -v -c install --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
+          # install python 3
+          sudo yum install -y python36 python36-devel python36-pip
           # Install git
           sudo yum install -y git
           # Clone the git repository
           git clone https://github.com/GKanitz/emr-airflow-project.git
-          sudo pip3 install boto3
-          sudo pip3 install pandas
-          sudo pip3 install fastparquet
+          sudo pip-3.6 install boto3
+          sudo pip-3.6 install pandas
+          sudo pip-3.6 install fastparquet
           # Install airflow using pip
           echo "Install Apache Airflow"
-          sudo SLUGIFY_USES_TEXT_UNIDECODE=yes pip3 install -U apache-airflow
-          sudo pip3 install typing_extensions
+          sudo SLUGIFY_USES_TEXT_UNIDECODE=yes pip-3.6 install -U apache-airflow
+          sudo pip-3.6 install typing_extensions
           # Encrypt connection passwords in metadata db
-          sudo pip3 install apache-airflow[crypto]
+          sudo pip-3.6 install apache-airflow[crypto]
           # Postgres operators and hook, support as an Airflow backend
-          sudo pip3 install apache-airflow[postgres]
-          sudo -H pip3 install six==1.10.0
-          sudo pip3 install --upgrade six
-          sudo pip3 install markupsafe
-          sudo pip3 install --upgrade MarkupSafe
-          sudo pip3 install --upgrade Flask
-          echo 'export PATH=/usr/local/bin:$PATH' >> /root/.bash_profile
-          source /root/.bash_profile
+          sudo pip-3.6 install apache-airflow[postgres]
+          sudo -H pip-3.6 install six==1.10.0
+          sudo pip-3.6 install --upgrade six
+          sudo pip-3.6 install markupsafe
+          sudo pip-3.6 install --upgrade MarkupSafe
+          sudo pip-3.6 install --upgrade Flask
+          # https://github.com/GoogleCloudPlatform/getting-started-python/issues/256
+          sudo pip-3.6 install werkzeug==0.16.0
+          echo 'export PATH=/usr/local/bin:$PATH' >> ~/.bash_profile
+          source ~/.bash_profile
           # Initialize Airflow
           airflow initdb
           # Update the RDS connection in the Airflow Config file
@@ -113,14 +117,13 @@ Resources:
           sed -i '/executor = SequentialExecutor/ a executor = LocalExecutor' ~/airflow/airflow.cfg
           airflow initdb
           # Move all the files to the ~/airflow directory. The Airflow config file is setup to hold all the DAG related files in the ~/airflow/ folder.
-          mv aws-concurrent-data-orchestration-pipeline-emr-livy/* ~/airflow/
+          mv emr-airflow-project/* ~/airflow/
           # Delete the higher-level git repository directory
-          rm -rf aws-concurrent-data-orchestration-pipeline-emr-livy
+          rm -rf emr-airflow-project
           # Replace the name of the S3 bucket in each of the .scala files. CHANGE THE HIGHLIGHTED PORTION BELOW TO THE NAME OF THE S3 BUCKET YOU CREATED IN STEP 1. The below command replaces the instance of the string ‘<s3-bucket>’ in each of the scripts to the name of the actual bucket.
-          sed -i 's/<s3-bucket>/${S3BucketName}/g' /root/airflow/dags/transform/*
+          sed -i 's/<s3-bucket>/${S3BucketName}/g' ~/airflow/dags/transform/*
           # Run Airflow webserver
-          airflow webserver&
-          airflow scheduler&
+          ~/airflow/start.sh
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
