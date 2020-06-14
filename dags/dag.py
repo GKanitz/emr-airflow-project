@@ -28,7 +28,7 @@ region = emr.get_region()
 emr.client(region_name=region)
 
 
-def create_emr():
+def create_emr(**kwargs):
     """Create a new EMR cluster"""
     cluster_id = emr.create_cluster(
         region_name=region, cluster_name="immigration_cluster", num_core_nodes=2
@@ -65,7 +65,9 @@ def submit_to_emr(script_file, **kwargs):
     month = execution_date.strftime("%b").lower()
     year = execution_date.strftime("%y")
     statement_response = emr.submit_statement(
-        session_url, script_file, f"month_year = '{month + year}'\n"
+        session_url,
+        script_file,
+        f"source_bucket = 'udacity-data-source'\noutput_bucket = '<output_bucket>'\nmonth_year = '{month + year}'\n",
     )
     emr.track_statement_progress(cluster_dns, statement_response.headers)
     emr.kill_spark_session(session_url)
