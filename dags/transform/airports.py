@@ -3,46 +3,39 @@ import os
 from pyspark.sql.functions import col, split
 from pyspark.sql.types import (
     StructType,
-    StructField as Fld,
-    DoubleType as Dbl,
-    StringType as Str,
+    StructField,
+    DoubleType,
+    StringType,
 )
-
-# define all variables that are provided externally
-# pylint: disable=undefined-variable,self-assigning-variable
-spark = spark
-source_bucket = source_bucket
-output_bucket = output_bucket
-# pylint: enable=undefined-variable,self-assigning-variable
 
 airportSchema = StructType(
     [
-        Fld("airport_id", Str()),
-        Fld("type", Str()),
-        Fld("name", Str()),
-        Fld("elevation_ft", Str()),
-        Fld("continent", Str()),
-        Fld("iso_country", Str()),
-        Fld("iso_region", Str()),
-        Fld("municipality", Str()),
-        Fld("gps_code", Str()),
-        Fld("iata_code", Str()),
-        Fld("local_code", Str()),
-        Fld("coordinates", Str()),
+        StructField("airport_id", StringType()),
+        StructField("type", StringType()),
+        StructField("name", StringType()),
+        StructField("elevation_ft", StringType()),
+        StructField("continent", StringType()),
+        StructField("iso_country", StringType()),
+        StructField("iso_region", StringType()),
+        StructField("municipality", StringType()),
+        StructField("gps_code", StringType()),
+        StructField("iata_code", StringType()),
+        StructField("local_code", StringType()),
+        StructField("coordinates", StringType()),
     ]
 )
+source_file = os.path.join(source_bucket, "airport-codes_csv.csv")
+print(f"Reading: {source_file}")
 df_airport = spark.read.csv(
-    os.path.join(source_bucket, "airport-codes_csv.csv"),
-    header="true",
-    schema=airportSchema,
+    source_file, header="true", schema=airportSchema,
 ).distinct()
 print("df_airport ", df_airport.count())
 
 df_airport_coord = (
     df_airport.filter("iso_country == 'US'")
     .withColumn("state", split(col("iso_region"), "-")[1])
-    .withColumn("latitude", split(col("coordinates"), ",")[0].cast(Dbl()))
-    .withColumn("longitude", split(col("coordinates"), ",")[1].cast(Dbl()))
+    .withColumn("latitude", split(col("coordinates"), ",")[0].cast(DoubleType()))
+    .withColumn("longitude", split(col("coordinates"), ",")[1].cast(DoubleType()))
     .drop("coordinates")
     .drop("iso_region")
     .drop("continent")
