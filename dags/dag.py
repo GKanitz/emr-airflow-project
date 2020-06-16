@@ -3,6 +3,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 import emrlib.emr_lib as emr
+import transform.labels as transform_labels
 
 
 default_args = {
@@ -59,7 +60,7 @@ def submit_to_emr(script_file, **kwargs):
     task_instance = kwargs["ti"]
     cluster_id = task_instance.xcom_pull(task_ids="create_cluster")
     cluster_dns = emr.get_cluster_dns(cluster_id)
-    headers = emr.create_spark_session(cluster_dns, "spark")
+    headers = emr.create_spark_session(cluster_dns, "pyspark")
     session_url = emr.wait_for_idle_session(cluster_dns, headers)
     execution_date = kwargs["execution_date"]
     month = execution_date.strftime("%b").lower()
@@ -67,43 +68,53 @@ def submit_to_emr(script_file, **kwargs):
     statement_response = emr.submit_statement(
         session_url,
         script_file,
-        f"source_bucket = 'udacity-data-source'\noutput_bucket = '<output_bucket>'\nmonth_year = '{month + year}'\n",
+        f"source_bucket = 's3a://udacity-data-source'\noutput_bucket = 's3a://<output_bucket>'\nmonth_year = '{month + year}'\n",
     )
     emr.track_statement_progress(cluster_dns, statement_response.headers)
     emr.kill_spark_session(session_url)
 
 
 # Define the individual tasks using Python Operators
-create_cluster = PythonOperator(
+create_cluster_op = PythonOperator(
     task_id="create_cluster", python_callable=create_emr, dag=dag
 )
 
-wait_for_cluster_completion = PythonOperator(
+wait_for_cluster_completion_op = PythonOperator(
     task_id="wait_for_cluster_completion", python_callable=wait_for_completion, dag=dag
 )
 
-transform_labels = PythonOperator(
+transform_labels_op = PythonOperator(
     task_id="transform_labels",
-    python_callable=submit_to_emr,
-    op_kwargs={"script_file": "/root/airflow/dags/transform/labels.py"},
+    python_callable=transform_labels.run,
+    op_kwargs={
+        "source_bucket": "s3a://udacity-data-source",
+        "output_bucket": "s3a://<output_bucket>",
+    },
     dag=dag,
 )
 
-transform_immigration = PythonOperator(
+transform_airports_op = PythonOperator(
+    task_id="transform_airports",
+    python_callable=submit_to_emr,
+    op_kwargs={"script_file": "/root/airflow/dags/transform/airports.py"},
+    dag=dag,
+)
+
+transform_immigration_op = PythonOperator(
     task_id="transform_immigration",
     python_callable=submit_to_emr,
     op_kwargs={"script_file": "/root/airflow/dags/transform/immigration.py"},
     dag=dag,
 )
 
-transform_states = PythonOperator(
+transform_states_op = PythonOperator(
     task_id="transform_states",
     python_callable=submit_to_emr,
     op_kwargs={"script_file": "/root/airflow/dags/transform/states.py"},
     dag=dag,
 )
 
-terminate_cluster = PythonOperator(
+terminate_cluster_op = PythonOperator(
     task_id="terminate_cluster",
     python_callable=terminate_emr,
     trigger_rule="all_done",
@@ -111,9 +122,10 @@ terminate_cluster = PythonOperator(
 )
 
 # pylint: disable=pointless-statement
-create_cluster >> wait_for_cluster_completion
-wait_for_cluster_completion >> [
-    transform_labels,
-    transform_states,
-] >> transform_immigration
-transform_immigration >> terminate_cluster
+create_cluster_op >> wait_for_cluster_completion_op
+wait_for_cluster_completion_op >> [
+    transform_airports_op,
+    transform_labels_op,
+    transform_states_op,
+] >> transform_immigration_op
+transform_immigration_op >> terminate_cluster_op

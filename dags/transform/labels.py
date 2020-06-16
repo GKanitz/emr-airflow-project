@@ -60,41 +60,50 @@ def read_dict(source_file, begin, pattern, key_col_name="Col1", val_col_name="Co
         return values
 
 
-source_file = os.path.join(source_bucket, "I94_SAS_Labels_Descriptions.SAS")
+def run(source_bucket, output_bucket):
+    source_file = os.path.join(source_bucket, "I94_SAS_Labels_Descriptions.SAS")
 
-print("countryCodes")
-data = read_dict(
-    source_file, "value i94cntyl", r"\s*(\d+)\s*=\s*'{1}(.+)'{1}", "Code", "Country"
-)
-df = pd.DataFrame(data=data)
-write(os.path.join(output_bucket, "countryCodes.parquet"), df, open_with=open)
+    print("countryCodes")
+    data = read_dict(
+        source_file, "value i94cntyl", r"\s*(\d+)\s*=\s*'{1}(.+)'{1}", "Code", "Country"
+    )
+    df = pd.DataFrame(data=data)
+    write(os.path.join(output_bucket, "countryCodes.parquet"), df, open_with=open)
 
-print("portCodes")
-data = read_dict(
-    source_file, "value $i94prtl", r"\s*'{1}(.+)'{1}\s*=\s*'{1}(.+)'{1}", "Code", "Port"
-)
-df = pd.DataFrame(data=data)
-write(os.path.join(output_bucket, "portCodes.parquet"), df, open_with=open)
+    print("portCodes")
+    data = read_dict(
+        source_file,
+        "value $i94prtl",
+        r"\s*'{1}(.+)'{1}\s*=\s*'{1}(.+)'{1}",
+        "Code",
+        "Port",
+    )
+    df = pd.DataFrame(data=data)
+    write(os.path.join(output_bucket, "portCodes.parquet"), df, open_with=open)
 
-print("transportCodes")
-data = read_dict(
-    source_file, "value i94model", r"\s*(\d+)\s*=\s*'{1}(.+)'{1}", "Code", "Transport"
-)
-df = pd.DataFrame(data=data)
-write(os.path.join(output_bucket, "transportCodes.parquet"), df, open_with=open)
+    print("transportCodes")
+    data = read_dict(
+        source_file,
+        "value i94model",
+        r"\s*(\d+)\s*=\s*'{1}(.+)'{1}",
+        "Code",
+        "Transport",
+    )
+    df = pd.DataFrame(data=data)
+    write(os.path.join(output_bucket, "transportCodes.parquet"), df, open_with=open)
 
-print("stateCodes")
-data = read_dict(
-    source_file,
-    "value i94addrl",
-    r"\s*'{1}(.+)'{1}\s*=\s*'{1}(.+)'{1}",
-    "Code",
-    "State",
-)
-df = pd.DataFrame(data=data)
-write(os.path.join(output_bucket, "stateCodes.parquet"), df, open_with=open)
+    print("stateCodes")
+    data = read_dict(
+        source_file,
+        "value i94addrl",
+        r"\s*'{1}(.+)'{1}\s*=\s*'{1}(.+)'{1}",
+        "Code",
+        "State",
+    )
+    df = pd.DataFrame(data=data)
+    write(os.path.join(output_bucket, "stateCodes.parquet"), df, open_with=open)
 
-print("visaCodes")
-data = read_dict(source_file, "I94VISA", r"\s*(\d+)\s*=\s*(\w+)", "Code", "Visa")
-df = pd.DataFrame(data=data)
-write(os.path.join(output_bucket, "visaCodes.parquet"), df, open_with=open)
+    print("visaCodes")
+    data = read_dict(source_file, "I94VISA", r"\s*(\d+)\s*=\s*(\w+)", "Code", "Visa")
+    df = pd.DataFrame(data=data)
+    write(os.path.join(output_bucket, "visaCodes.parquet"), df, open_with=open)
