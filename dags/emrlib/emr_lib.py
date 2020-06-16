@@ -52,7 +52,7 @@ def get_security_group_id(group_name, region_name):
 def create_cluster(
     region_name,
     cluster_name="Airflow-" + str(datetime.now()),
-    release_label="emr-5.9.0",
+    release_label="emr-5.20.0",
     master_instance_type="m3.xlarge",
     num_core_nodes=2,
     core_node_instance_type="m3.xlarge",
