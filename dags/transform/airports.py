@@ -25,7 +25,6 @@ airportSchema = StructType(
     ]
 )
 source_file = os.path.join(source_bucket, "airport-codes_csv.csv")
-print(f"Reading: {source_file}")
 df_airport = spark.read.csv(
     source_file, header="true", schema=airportSchema,
 ).distinct()
