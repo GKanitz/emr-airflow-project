@@ -89,6 +89,7 @@ Resources:
           sudo yum install -y git
           # Clone the git repository
           git clone https://github.com/GKanitz/emr-airflow-project.git
+          sudo pip-3.6 install packaging
           sudo pip-3.6 install boto3
           sudo pip-3.6 install pandas
           sudo pip-3.6 install fastparquet
